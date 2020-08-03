@@ -3,14 +3,11 @@ provider "aws" {
   region = var.aws_region
 }
 
-data "aws_iam_role" "role" {
-  name = var.role_name
-}
-
 resource "aws_lambda_function" "lambda" {
   function_name = var.function_name
+  filename = var.lambda_src_location
   handler = var.handler
-  role = data.aws_iam_role.role.arn
+  role = var.role_arn
   runtime = "python3.8"
   timeout = var.timeout
   memory_size = var.memory

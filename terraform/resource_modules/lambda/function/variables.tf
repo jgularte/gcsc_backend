@@ -4,9 +4,8 @@ variable "aws_region" {
   description = "The region in which to build the resource"
 }
 
-variable "role_name" {
+variable "role_arn" {
   type = string
-  default = "developers"
   description = "IAM Role the lambda should temporarily assume during runtime"
 }
 

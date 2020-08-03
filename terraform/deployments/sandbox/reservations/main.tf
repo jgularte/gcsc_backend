@@ -1,3 +1,4 @@
+// DYNAMODB TABLE USED FOR RESERVATIONS
 module "reservations_table" {
   source = "../../../resource_modules/dynamodb/basic"
   aws_region = "us-west-2"
@@ -14,6 +15,7 @@ module "reservations_table" {
   ttl_att_name = ""
 }
 
+// IAM ROLE THAT WILL BE GIVEN TO THE RESERVATIONS LAMBDA FUNCTION
 module "reservations_lambda_role" {
   source = "../../../resource_modules/iam/role"
   aws_region = "us-west-2"
@@ -58,6 +60,34 @@ EOF
   ]
 }
 EOF
+}
+
+resource "null_resource" "dos2unix" {
+  provisioner "local-exec" {
+    command = "dos2unix create-reservations.sh"
+    working_dir = "../../../scripts"
+  }
+}
+
+// SCRIPT TO PACKAGE LAMBDA BEFORE DEPLOYMENT
+// FIRST PARAM: Script Location
+// SECOND PARAM: Environment
+// THIRD PARAM: Source Code Location
+data "external" "create_reservation_lambda" {
+  program = ["../../../scripts/create-reservations.sh", "sandbox", "reservations", "../../../../"]
+}
+
+// RESREVATIONS LAMBDA FUNCTION
+module "reservations-lambda-function" {
+  source = "../../../resource_modules/lambda/function"
+  role_arn = module.reservations_lambda_role.role_arn
+  function_name = "reservations-lambda_sandbox"
+  aws_region = "us-west-2"
+  handler = "reservations.handler"
+  timeout = 30
+  memory = 256
+  lambda_src_location = "${data.external.create_reservation_lambda.result.package_loc}/lambda.zip"
+  environment = "sandbox"
 }
 
 terraform {
