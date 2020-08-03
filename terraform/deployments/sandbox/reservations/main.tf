@@ -1,10 +1,12 @@
+// REMEMBER TO: 'export AWS_PROFILE=personal'
+
 // DYNAMODB TABLE USED FOR RESERVATIONS
 module "reservations_table" {
   source = "../../../resource_modules/dynamodb/basic"
   aws_region = "us-west-2"
   table_name = "reservations-table_sandbox"
-  hash_key = "created_by"
-  hash_key_type = "S"
+  hash_key = "reservation_id"
+  hash_key_type = "N"
   range_key = "start_date_epoch"
   range_key_type = "N"
   billing_mode = "PROVISIONED"
@@ -51,17 +53,18 @@ EOF
         "dynamodb:PutItem",
         "dynamodb:Query",
         "dynamodb:Scan",
-        "dynamodb:Update"
+        "dynamodb:UpdateItem",
+        "xray:*"
       ],
       "Effect": "Allow",
-      "Resource": "${module.reservations_table.arn}"
+      "Resource": "*"
     }
   ]
 }
 EOF
 }
 
-// PERFORM DOS2UNIX CALL ON DEPLOY SCRIPT, LESS ANNOYING
+// PERFORM DOS2UNIX CALL ON DEPLOY SCRIPT, LESS ANNOYING THIS WAY
 resource "null_resource" "dos2unix" {
   provisioner "local-exec" {
     command = "dos2unix create-reservations.sh"
