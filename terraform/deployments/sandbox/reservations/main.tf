@@ -12,7 +12,6 @@ module "reservations_table" {
   write_capacity = 5
   environment = "sandbox"
   pitr_enabled = false
-  ttl_att_name = ""
 }
 
 // IAM ROLE THAT WILL BE GIVEN TO THE RESERVATIONS LAMBDA FUNCTION
@@ -62,6 +61,7 @@ EOF
 EOF
 }
 
+// PERFORM DOS2UNIX CALL ON DEPLOY SCRIPT, LESS ANNOYING
 resource "null_resource" "dos2unix" {
   provisioner "local-exec" {
     command = "dos2unix create-reservations.sh"
@@ -77,7 +77,7 @@ data "external" "create_reservation_lambda" {
   program = ["../../../scripts/create-reservations.sh", "sandbox", "reservations", "../../../../"]
 }
 
-// RESREVATIONS LAMBDA FUNCTION
+// RESERVATIONS LAMBDA FUNCTION
 module "reservations-lambda-function" {
   source = "../../../resource_modules/lambda/function"
   role_arn = module.reservations_lambda_role.role_arn
@@ -88,6 +88,7 @@ module "reservations-lambda-function" {
   memory = 256
   lambda_src_location = "${data.external.create_reservation_lambda.result.package_loc}/lambda.zip"
   environment = "sandbox"
+  tracing_mode = "Active"
 }
 
 terraform {

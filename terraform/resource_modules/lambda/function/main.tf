@@ -19,6 +19,10 @@ resource "aws_lambda_function" "lambda" {
     }
   }
 
+  tracing_config {
+    mode = var.tracing_mode
+  }
+
   tags = {
     project_name = "GularteCabinSharedCalendar"
     environment = var.environment

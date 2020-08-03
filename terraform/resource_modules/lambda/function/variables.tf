@@ -36,6 +36,12 @@ variable "lambda_src_location" {
   description = "The local location of the lambda source code"
 }
 
+variable "tracing_mode" {
+  type = string
+  description = "Whether to enable tracing or not, Active or PassThrough"
+  default = "PassThrough"
+}
+
 variable "environment" {
   type = string
   description = "The runtime environment of the lambda function"

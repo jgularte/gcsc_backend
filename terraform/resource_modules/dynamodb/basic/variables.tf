@@ -42,16 +42,6 @@ variable "billing_mode" {
   default = "PROVISIONED"
 }
 
-variable "ttl_att_name" {
-  type = string
-  default = "TimeToExist"
-}
-
-variable "ttl_enabled" {
-  type = bool
-  default = false
-}
-
 variable "pitr_enabled" {
   type = bool
   default = false
