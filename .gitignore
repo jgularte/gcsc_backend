@@ -1,4 +1,4 @@
 .idea
-venv
+/venv
 .terraform
-packages
+/packages
