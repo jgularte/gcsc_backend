@@ -22,3 +22,7 @@ resource "aws_iam_role_policy_attachment" "attach" {
   policy_arn = aws_iam_policy.policy.arn
   role = aws_iam_role.role.name
 }
+
+output "role_arn" {
+  value = aws_iam_role.role.arn
+}

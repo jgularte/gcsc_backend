@@ -4,9 +4,8 @@ variable "aws_region" {
   description = "The region in which to build the resource"
 }
 
-variable "role_name" {
+variable "role_arn" {
   type = string
-  default = "developers"
   description = "IAM Role the lambda should temporarily assume during runtime"
 }
 
@@ -35,6 +34,12 @@ variable "memory" {
 variable "lambda_src_location" {
   type = string
   description = "The local location of the lambda source code"
+}
+
+variable "tracing_mode" {
+  type = string
+  description = "Whether to enable tracing or not, Active or PassThrough"
+  default = "PassThrough"
 }
 
 variable "environment" {
