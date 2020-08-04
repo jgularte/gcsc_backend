@@ -75,7 +75,8 @@ resource "null_resource" "dos2unix" {
 // SCRIPT TO PACKAGE LAMBDA BEFORE DEPLOYMENT
 // FIRST PARAM: Script Location
 // SECOND PARAM: Environment
-// THIRD PARAM: Source Code Location
+// THIRD PARAM: MODULE TO DEPLOY
+// FOURTH PARAM: Source Code Location
 data "external" "create_reservation_lambda" {
   program = ["../../../scripts/create-reservations.sh", "sandbox", "reservations", "../../../../"]
 }
