@@ -1,0 +1,36 @@
+{
+  "version": "2.0",
+  "app_name": "source",
+  "tags": {
+    "application": "gularte-shared-cabin-calendar",
+    "development_type": "backend"
+  },
+  "stages": {
+    "sandbox": {
+      "api_gateway_stage": "sandbox",
+      "api_gateway_endpoint_type": "REGIONAL",
+      "autogen_policy": false,
+      "iam_policy_file": "sandbox-policy.json",
+      "tags": {
+        "environment": "sandbox",
+        "criticality": "low"
+      },
+      "environment_variables": {
+        "RUN_ENV": "sandbox"
+      }
+    }
+  },
+  "prod": {
+    "api_gateway_stage": "prod",
+    "api_gateway_endpoint_type": "REGIONAL",
+    "autogen_policy": false,
+    "iam_policy_file": "prod-policy.json",
+    "tags": {
+      "environment": "prod",
+      "criticality": "high"
+    },
+    "environment_variables": {
+      "RUN_ENV": "prod"
+    }
+  }
+}
