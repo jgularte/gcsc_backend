@@ -23,9 +23,15 @@ class DynamoDBClient:
         """
         # objects
         self._config = config
-        self._client = boto3.client('dynamodb')
-        self._logger = logging.getLogger()
+        self._logger = logging.getLogger(__name__)
         self._logger.setLevel(logging.INFO)
+
+        # set up main client
+        if "endpoint_url" in self._config.keys():
+            self._logger.info("Local Dynamo Table")
+            self._client = boto3.client("dynamodb", endpoint_url=self._config["endpoint_url"])
+        else:
+            self._client = boto3.client('dynamodb')
 
         # table key condition expressions
         self.only_part_key = "#p = :partitionkeyval"
@@ -53,6 +59,20 @@ class DynamoDBClient:
             self._logger.error(err_message)
             raise Exception(err_message)
 
+    def scan(self, table_name):
+        """
+
+        :param table_name: table to scan
+        :return: items
+        """
+        try:
+            result = self._client.scan(
+                TableName=table_name
+            )
+            return result
+        except ClientError as e:
+            self._logger.error(e)
+            raise Exception(e)
 
     def get_last_invoker(self, partition_value, epoch_end, as_dict=True, replace_decimals=True):
         """

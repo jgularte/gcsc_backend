@@ -1,3 +1,10 @@
 {
-  "run_env": "sandbox"
+  "run_env": "sandbox",
+  "dynamodb": {
+    "reservations": {
+      "table_name": "reservations-table_sandbox",
+      "part_key": "reservation_id",
+      "sort_key": "start_date_epoch"
+    }
+  }
 }
