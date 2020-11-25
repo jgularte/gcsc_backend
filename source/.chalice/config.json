@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "app_name": "source",
+  "app_name": "gularte_cabin_shared_calendar",
   "tags": {
     "application": "gularte-shared-cabin-calendar",
     "development_type": "backend"

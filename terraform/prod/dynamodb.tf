@@ -1,30 +1,28 @@
 // DYNAMODB TABLE USED FOR RESERVATIONS
 // todo set autoscaling
 locals {
-  table_name    = "reservations-table_sandbox"
+  table_name    = "reservations-table"
   hash_key      = "reservation_id"
   hash_key_type = "S"
 
   range_key      = "epoch_start"
   range_key_type = "N"
 
+  read_capacity  = 5
+  write_capacity = 5
+
   user_guid_index_name = "UserGUIDIndex"
   user_guid_index_hash = "user_guid"
   user_guid_index_type = "S"
   user_guid_index_proj = "ALL"
-
-  read_capacity  = 5
-  write_capacity = 5
+  user_guid_index_write = 3
+  user_guid_index_read = 3
 
   ttl_attribute = "TimeToExist"
   ttl_enabled   = false
 
   billing_mode = "PROVISIONED"
   pitr_enabled = false
-}
-
-provider "aws" {
-  region = var.aws_region
 }
 
 resource "aws_dynamodb_table" "reservations_table" {
@@ -54,6 +52,8 @@ resource "aws_dynamodb_table" "reservations_table" {
     hash_key        = local.user_guid_index_hash
     name            = local.user_guid_index_name
     projection_type = local.user_guid_index_proj
+    write_capacity =  local.user_guid_index_write
+    read_capacity =  local.user_guid_index_read
   }
 
   point_in_time_recovery {
