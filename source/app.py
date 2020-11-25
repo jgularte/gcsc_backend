@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 # environment variable is set via chalice config; set global envs
-ENV = os.environ["MICROSVC_ENV"] if "MICROSVC_ENV" in list(os.environ) else "sandbox"
+ENV = os.environ["RUN_ENV"] if "RUN_ENV" in list(os.environ) else "sandbox"
 with open(f"chalicelib/configs/{ENV}.json") as f:
     CONFIG = json.load(f)
 
@@ -27,9 +27,24 @@ with open(f"chalicelib/configs/{ENV}.json") as f:
 app = Chalice(app_name='gularte-cabin-calendar-backend')
 
 
-@app.route("/healthcheck", methods=["GET"])
+@app.authorizer()
+def temp_auth(auth_request):
+    print(auth_request.token)
+    if auth_request.auth_type == "TOKEN" and auth_request.token == "TOKEN":
+        print("success")
+        return AuthResponse(routes=["/*"], principal_id="user")
+    else:
+        return AuthResponse(routes=[], principal_id="user")
+
+
+@app.route("/healthcheck", methods=["GET"], authorizer=temp_auth)
 def healthcheck():
     return Response(status_code=200, body={"message": "I am healthy."})
+
+
+@app.route("/open", methods=["GET"])
+def open_end():
+    return Response(status_code=200, body={"please": "please"})
 
 
 @app.route("/reservations", methods=["GET", "POST", "PUT", "DELETE"])
