@@ -14,6 +14,9 @@ import json
 # chalice imports
 from chalice import Chalice, AuthResponse, Response
 
+# aws clients imports
+from chalicelib.aws_clients import secrets_manager_client as sm_client
+
 # init logging client
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -27,18 +30,33 @@ with open(f"chalicelib/configs/{ENV}.json") as f:
 app = Chalice(app_name='gularte-cabin-calendar-backend')
 
 
+"""
+AUTHORIZERS
+"""
+
+
 @app.authorizer()
-def temp_auth(auth_request):
-    if auth_request.auth_type == "TOKEN" and auth_request.token == "TOKEN":
+def token_auth(auth_request):
+    if auth_request.auth_type == "TOKEN" and auth_request.token == sm_client.get_secret(CONFIG["secret_id"], CONFIG["secret_key"], CONFIG["secret_region"]):
         return AuthResponse(routes=["/*"], principal_id="user")
     else:
         return AuthResponse(routes=[], principal_id="user")
 
 
-@app.route("/healthcheck", methods=["GET", "POST"], authorizer=temp_auth)
+"""
+HEALTHCHECK
+"""
+
+
+@app.route("/healthcheck", methods=["GET", "POST"], authorizer=token_auth)
 def healthcheck():
     log(app.current_request.to_dict(), app.current_request.json_body)
     return Response(status_code=200, body={"message": "I am healthy."})
+
+
+"""
+RESERVATIONS CONTROLLER
+"""
 
 
 @app.route("/reservations", methods=["GET", "POST", "PUT", "DELETE"])
