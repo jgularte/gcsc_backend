@@ -1,6 +1,6 @@
 module "main-user-pool" {
   source                   = "../../resource_modules/cognito/user_pool"
-  name                     = "GularteCabinSharedCalendarUserPool_sandbox"
+  name                     = "GularteCabinSharedCalendarUserPool"
   mfa_config               = "OFF"
   username_attributes      = ["email", "phone_number"]
   auto_verified_attributes = ["email"]

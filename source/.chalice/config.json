@@ -18,19 +18,19 @@
       "environment_variables": {
         "RUN_ENV": "sandbox"
       }
-    }
-  },
-  "prod": {
-    "api_gateway_stage": "prod",
-    "api_gateway_endpoint_type": "REGIONAL",
-    "autogen_policy": false,
-    "iam_policy_file": "prod-policy.json",
-    "tags": {
-      "environment": "prod",
-      "criticality": "high"
     },
-    "environment_variables": {
-      "RUN_ENV": "prod"
+    "prod": {
+      "api_gateway_stage": "prod",
+      "api_gateway_endpoint_type": "REGIONAL",
+      "autogen_policy": false,
+      "iam_policy_file": "prod-policy.json",
+      "tags": {
+        "environment": "prod",
+        "criticality": "high"
+      },
+      "environment_variables": {
+        "RUN_ENV": "prod"
+      }
     }
   }
 }

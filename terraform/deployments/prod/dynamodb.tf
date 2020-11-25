@@ -1,7 +1,7 @@
 // DYNAMODB TABLE USED FOR RESERVATIONS
 // todo set autoscaling
 locals {
-  table_name    = "reservations-table_sandbox"
+  table_name    = "reservations-table"
   hash_key      = "reservation_id"
   hash_key_type = "S"
 
