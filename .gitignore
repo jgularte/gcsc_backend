@@ -3,3 +3,8 @@
 .terraform
 /packages
 source/.chalice/deployments/
+terraform/sandbox/build-tfplan
+terraform/sandbox/deployment.zip
+terraform/prod/build-tfplan
+terraform/prod/deployment.zip
+.pyc
