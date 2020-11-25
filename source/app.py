@@ -17,6 +17,9 @@ from chalice import Chalice, AuthResponse, Response
 # aws clients imports
 from chalicelib.aws_clients import secrets_manager_client as sm_client
 
+# custom services imports
+from chalicelib import reservations_service as rs
+
 # init logging client
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -48,8 +51,13 @@ HEALTHCHECK
 """
 
 
-@app.route("/healthcheck", methods=["GET", "POST"], authorizer=token_auth)
+@app.route(
+    "/healthcheck",
+    methods=["GET", "POST"],
+    authorizer=token_auth
+)
 def healthcheck():
+    # log request and return
     log(app.current_request.to_dict(), app.current_request.json_body)
     return Response(status_code=200, body={"message": "I am healthy."})
 
@@ -59,15 +67,24 @@ RESERVATIONS CONTROLLER
 """
 
 
-@app.route("/reservations", methods=["GET", "POST", "PUT", "DELETE"])
+@app.route(
+    "/reservations",
+    methods=["GET", "POST", "PUT", "DELETE"],
+    authorizer=token_auth
+)
 def reservation():
+    # log incoming request
     log(app.current_request.to_dict(), app.current_request.json_body)
+
+    # perform routing based off request
     if app.current_request.method == "GET":
-        # GET reservation; if 'id' query param is available, use to get a single res. if no qp's then list all res.
+        # GET reservation; if 'id' query param is available, use to get a single res. if no params then list all res.
         if not app.current_request.query_params:
-            pass
-        elif app.current_request.query_params.get("id"):
-            pass
+            return rs.list_reservations()
+        elif app.current_request.query_params.get("guid"):
+            return rs.get_reservation(
+                reservation_guid=app.current_request.query_params["guid"]
+            )
         else:
             return Response(
                 status_code=400,
@@ -79,7 +96,9 @@ def reservation():
     elif app.current_request.method == "POST":
         # POST reservation; the reservation to create needs to be in the requests body
         if app.current_request.json_body:
-            pass
+            return rs.create_reservation(
+                reservation=app.current_request.json_body
+            )
         else:
             return Response(
                 status_code=400,
@@ -92,7 +111,9 @@ def reservation():
         # PUT reservation; the reservation to update needs to be in the requests body
         # POST reservation; the reservation to create needs to be in the requests body
         if app.current_request.json_body:
-            pass
+            return rs.update_reservation(
+                reservation=app.current_request.json_body
+            )
         else:
             return Response(
                 status_code=400,
@@ -103,8 +124,10 @@ def reservation():
             )
     else:
         # DELETE reservation; the 'id' query param indicates what reservation to delete
-        if app.current_request.query_params.get("id"):
-            pass
+        if app.current_request.query_params.get("guid"):
+            return rs.delete_reservation(
+                reservation_guid=app.current_request.query_params["guid"]
+            )
         else:
             return Response(
                 status_code=400,

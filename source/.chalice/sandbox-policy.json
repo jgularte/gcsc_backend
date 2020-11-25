@@ -10,9 +10,7 @@
         "secretsmanager:DescribeSecret",
         "secretsmanager:ListSecretVersionIds"
       ],
-      "Resource": [
-        "arn:aws:secretsmanager:us-west-2:045526752776:secret:gcsc_api_tokens-BX1Uzr"
-      ]
+      "Resource": "*"
     },
     {
       "Sid": "CloudWatchLogs",
@@ -50,9 +48,7 @@
         "dynamodb:Scan",
         "dynamodb:UpdateItem"
       ],
-      "Resource": [
-        "arn:aws:dynamodb:us-west-2:045526752776:table/reservations-table_sandbox"
-      ]
+      "Resource": "*"
     }
   ]
 }
