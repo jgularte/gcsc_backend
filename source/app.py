@@ -29,26 +29,21 @@ app = Chalice(app_name='gularte-cabin-calendar-backend')
 
 @app.authorizer()
 def temp_auth(auth_request):
-    print(auth_request.token)
     if auth_request.auth_type == "TOKEN" and auth_request.token == "TOKEN":
-        print("success")
         return AuthResponse(routes=["/*"], principal_id="user")
     else:
         return AuthResponse(routes=[], principal_id="user")
 
 
-@app.route("/healthcheck", methods=["GET"], authorizer=temp_auth)
+@app.route("/healthcheck", methods=["GET", "POST"], authorizer=temp_auth)
 def healthcheck():
+    log(app.current_request.to_dict(), app.current_request.json_body)
     return Response(status_code=200, body={"message": "I am healthy."})
-
-
-@app.route("/open", methods=["GET"])
-def open_end():
-    return Response(status_code=200, body={"please": "please"})
 
 
 @app.route("/reservations", methods=["GET", "POST", "PUT", "DELETE"])
 def reservation():
+    log(app.current_request.to_dict(), app.current_request.json_body)
     if app.current_request.method == "GET":
         # GET reservation; if 'id' query param is available, use to get a single res. if no qp's then list all res.
         if not app.current_request.query_params:
@@ -100,3 +95,17 @@ def reservation():
                              " document on how to use this endpoint."
                 }
             )
+
+
+"""
+HELPER FUNCTIONS
+"""
+
+
+def log(request: dict, body: dict or None) -> None:
+    logger.info(f"Path: {request['path']}; \n"
+                f"Method: {request['method']}; \n"
+                f"URI Params: {json.dumps(request['uri_params'])}; \n"
+                f"Query Params: {json.dumps(request['query_params'])}; \n"
+                f"Body: {json.dumps(body)}"
+                )
