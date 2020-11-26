@@ -5,21 +5,21 @@
         "name": "gularte_cabin_shared_calendar-prod-api_handler",
         "assume_role_policy": "{\"Version\": \"2012-10-17\", \"Statement\": [{\"Sid\": \"\", \"Effect\": \"Allow\", \"Principal\": {\"Service\": \"lambda.amazonaws.com\"}, \"Action\": \"sts:AssumeRole\"}]}"
       },
-      "temp_auth_role": {
-        "name": "gularte_cabin_shared_calendar-prod-temp_auth",
+      "token_auth_role": {
+        "name": "gularte_cabin_shared_calendar-prod-token_auth",
         "assume_role_policy": "{\"Version\": \"2012-10-17\", \"Statement\": [{\"Sid\": \"\", \"Effect\": \"Allow\", \"Principal\": {\"Service\": \"lambda.amazonaws.com\"}, \"Action\": \"sts:AssumeRole\"}]}"
       }
     },
     "aws_iam_role_policy": {
       "api_handler_role": {
         "name": "api_handler_rolePolicy",
-        "policy": "{\"Version\": \"2012-10-17\", \"Statement\": [{\"Sid\": \"Editor\", \"Effect\": \"Allow\", \"Action\": [\"dynamodb:GetItem\", \"dynamodb:BatchGetItem\", \"dynamodb:BatchWriteItem\", \"dynamodb:DeleteItem\", \"dynamodb:PutItem\", \"dynamodb:Query\", \"dynamodb:Scan\", \"dynamodb:UpdateItem\", \"xray:*\"], \"Resource\": \"*\"}]}",
+        "policy": "{\"Version\": \"2012-10-17\", \"Statement\": [{\"Sid\": \"SecretsManager\", \"Effect\": \"Allow\", \"Action\": [\"secretsmanager:GetResourcePolicy\", \"secretsmanager:GetSecretValue\", \"secretsmanager:DescribeSecret\", \"secretsmanager:ListSecretVersionIds\"], \"Resource\": \"*\"}, {\"Sid\": \"CloudWatchLogs\", \"Effect\": \"Allow\", \"Action\": [\"logs:CreateLogStream\", \"logs:CreateLogGroup\", \"logs:PutLogEvents\"], \"Resource\": \"*\"}, {\"Sid\": \"S3\", \"Effect\": \"Allow\", \"Action\": [\"s3:GetAccessPoint\", \"s3:PutAccountPublicAccessBlock\", \"s3:GetAccountPublicAccessBlock\", \"s3:ListAllMyBuckets\", \"s3:ListAccessPoints\", \"s3:ListJobs\", \"s3:CreateJob\", \"s3:HeadBucket\"], \"Resource\": \"*\"}, {\"Sid\": \"DynamoDB\", \"Effect\": \"Allow\", \"Action\": [\"dynamodb:DeleteItem\", \"dynamodb:GetItem\", \"dynamodb:PutItem\", \"dynamodb:Query\", \"dynamodb:Scan\", \"dynamodb:UpdateItem\"], \"Resource\": \"*\"}]}",
         "role": "${aws_iam_role.api_handler_role.id}"
       },
-      "temp_auth_role": {
-        "name": "temp_auth_rolePolicy",
-        "policy": "{\"Version\": \"2012-10-17\", \"Statement\": [{\"Sid\": \"Editor\", \"Effect\": \"Allow\", \"Action\": [\"dynamodb:GetItem\", \"dynamodb:BatchGetItem\", \"dynamodb:BatchWriteItem\", \"dynamodb:DeleteItem\", \"dynamodb:PutItem\", \"dynamodb:Query\", \"dynamodb:Scan\", \"dynamodb:UpdateItem\", \"xray:*\"], \"Resource\": \"*\"}]}",
-        "role": "${aws_iam_role.temp_auth_role.id}"
+      "token_auth_role": {
+        "name": "token_auth_rolePolicy",
+        "policy": "{\"Version\": \"2012-10-17\", \"Statement\": [{\"Sid\": \"SecretsManager\", \"Effect\": \"Allow\", \"Action\": [\"secretsmanager:GetResourcePolicy\", \"secretsmanager:GetSecretValue\", \"secretsmanager:DescribeSecret\", \"secretsmanager:ListSecretVersionIds\"], \"Resource\": \"*\"}, {\"Sid\": \"CloudWatchLogs\", \"Effect\": \"Allow\", \"Action\": [\"logs:CreateLogStream\", \"logs:CreateLogGroup\", \"logs:PutLogEvents\"], \"Resource\": \"*\"}, {\"Sid\": \"S3\", \"Effect\": \"Allow\", \"Action\": [\"s3:GetAccessPoint\", \"s3:PutAccountPublicAccessBlock\", \"s3:GetAccountPublicAccessBlock\", \"s3:ListAllMyBuckets\", \"s3:ListAccessPoints\", \"s3:ListJobs\", \"s3:CreateJob\", \"s3:HeadBucket\"], \"Resource\": \"*\"}, {\"Sid\": \"DynamoDB\", \"Effect\": \"Allow\", \"Action\": [\"dynamodb:DeleteItem\", \"dynamodb:GetItem\", \"dynamodb:PutItem\", \"dynamodb:Query\", \"dynamodb:Scan\", \"dynamodb:UpdateItem\"], \"Resource\": \"*\"}]}",
+        "role": "${aws_iam_role.token_auth_role.id}"
       }
     },
     "aws_lambda_function": {
@@ -45,10 +45,10 @@
         },
         "role": "${aws_iam_role.api_handler_role.arn}"
       },
-      "temp_auth": {
-        "function_name": "gularte_cabin_shared_calendar-prod-temp_auth",
+      "token_auth": {
+        "function_name": "gularte_cabin_shared_calendar-prod-token_auth",
         "runtime": "python3.8",
-        "handler": "app.temp_auth",
+        "handler": "app.token_auth",
         "memory_size": 128,
         "tags": {
           "application": "gularte-shared-cabin-calendar",
@@ -65,7 +65,7 @@
             "RUN_ENV": "prod"
           }
         },
-        "role": "${aws_iam_role.temp_auth_role.arn}"
+        "role": "${aws_iam_role.token_auth_role.arn}"
       }
     },
     "aws_api_gateway_rest_api": {
@@ -114,8 +114,8 @@
         "principal": "apigateway.amazonaws.com",
         "source_arn": "${aws_api_gateway_rest_api.rest_api.execution_arn}/*"
       },
-      "temp_auth_invoke": {
-        "function_name": "gularte_cabin_shared_calendar-prod-temp_auth",
+      "token_auth_invoke": {
+        "function_name": "gularte_cabin_shared_calendar-prod-token_auth",
         "action": "lambda:InvokeFunction",
         "principal": "apigateway.amazonaws.com",
         "source_arn": "${aws_api_gateway_rest_api.rest_api.execution_arn}/*"
@@ -156,7 +156,7 @@
     },
     "template_file": {
       "chalice_api_swagger": {
-        "template": "{\"swagger\": \"2.0\", \"info\": {\"version\": \"1.0\", \"title\": \"gularte-cabin-calendar-backend\"}, \"schemes\": [\"https\"], \"paths\": {\"/healthcheck\": {\"get\": {\"consumes\": [\"application/json\"], \"produces\": [\"application/json\"], \"responses\": {\"200\": {\"description\": \"200 response\", \"schema\": {\"$ref\": \"#/definitions/Empty\"}}}, \"x-amazon-apigateway-integration\": {\"responses\": {\"default\": {\"statusCode\": \"200\"}}, \"uri\": \"${aws_lambda_function.api_handler.invoke_arn}\", \"passthroughBehavior\": \"when_no_match\", \"httpMethod\": \"POST\", \"contentHandling\": \"CONVERT_TO_TEXT\", \"type\": \"aws_proxy\"}, \"security\": [{\"temp_auth\": []}]}}, \"/open\": {\"get\": {\"consumes\": [\"application/json\"], \"produces\": [\"application/json\"], \"responses\": {\"200\": {\"description\": \"200 response\", \"schema\": {\"$ref\": \"#/definitions/Empty\"}}}, \"x-amazon-apigateway-integration\": {\"responses\": {\"default\": {\"statusCode\": \"200\"}}, \"uri\": \"${aws_lambda_function.api_handler.invoke_arn}\", \"passthroughBehavior\": \"when_no_match\", \"httpMethod\": \"POST\", \"contentHandling\": \"CONVERT_TO_TEXT\", \"type\": \"aws_proxy\"}}}, \"/reservations\": {\"get\": {\"consumes\": [\"application/json\"], \"produces\": [\"application/json\"], \"responses\": {\"200\": {\"description\": \"200 response\", \"schema\": {\"$ref\": \"#/definitions/Empty\"}}}, \"x-amazon-apigateway-integration\": {\"responses\": {\"default\": {\"statusCode\": \"200\"}}, \"uri\": \"${aws_lambda_function.api_handler.invoke_arn}\", \"passthroughBehavior\": \"when_no_match\", \"httpMethod\": \"POST\", \"contentHandling\": \"CONVERT_TO_TEXT\", \"type\": \"aws_proxy\"}}, \"post\": {\"consumes\": [\"application/json\"], \"produces\": [\"application/json\"], \"responses\": {\"200\": {\"description\": \"200 response\", \"schema\": {\"$ref\": \"#/definitions/Empty\"}}}, \"x-amazon-apigateway-integration\": {\"responses\": {\"default\": {\"statusCode\": \"200\"}}, \"uri\": \"${aws_lambda_function.api_handler.invoke_arn}\", \"passthroughBehavior\": \"when_no_match\", \"httpMethod\": \"POST\", \"contentHandling\": \"CONVERT_TO_TEXT\", \"type\": \"aws_proxy\"}}, \"put\": {\"consumes\": [\"application/json\"], \"produces\": [\"application/json\"], \"responses\": {\"200\": {\"description\": \"200 response\", \"schema\": {\"$ref\": \"#/definitions/Empty\"}}}, \"x-amazon-apigateway-integration\": {\"responses\": {\"default\": {\"statusCode\": \"200\"}}, \"uri\": \"${aws_lambda_function.api_handler.invoke_arn}\", \"passthroughBehavior\": \"when_no_match\", \"httpMethod\": \"POST\", \"contentHandling\": \"CONVERT_TO_TEXT\", \"type\": \"aws_proxy\"}}, \"delete\": {\"consumes\": [\"application/json\"], \"produces\": [\"application/json\"], \"responses\": {\"200\": {\"description\": \"200 response\", \"schema\": {\"$ref\": \"#/definitions/Empty\"}}}, \"x-amazon-apigateway-integration\": {\"responses\": {\"default\": {\"statusCode\": \"200\"}}, \"uri\": \"${aws_lambda_function.api_handler.invoke_arn}\", \"passthroughBehavior\": \"when_no_match\", \"httpMethod\": \"POST\", \"contentHandling\": \"CONVERT_TO_TEXT\", \"type\": \"aws_proxy\"}}}}, \"definitions\": {\"Empty\": {\"type\": \"object\", \"title\": \"Empty Schema\"}}, \"x-amazon-apigateway-binary-media-types\": [\"application/octet-stream\", \"application/x-tar\", \"application/zip\", \"audio/basic\", \"audio/ogg\", \"audio/mp4\", \"audio/mpeg\", \"audio/wav\", \"audio/webm\", \"image/png\", \"image/jpg\", \"image/jpeg\", \"image/gif\", \"video/ogg\", \"video/mpeg\", \"video/webm\"], \"securityDefinitions\": {\"temp_auth\": {\"in\": \"header\", \"type\": \"apiKey\", \"name\": \"Authorization\", \"x-amazon-apigateway-authtype\": \"custom\", \"x-amazon-apigateway-authorizer\": {\"type\": \"token\", \"authorizerUri\": \"${aws_lambda_function.temp_auth.invoke_arn}\"}}}}"
+        "template": "{\"swagger\": \"2.0\", \"info\": {\"version\": \"1.0\", \"title\": \"gularte-cabin-calendar-backend\"}, \"schemes\": [\"https\"], \"paths\": {\"/healthcheck\": {\"get\": {\"consumes\": [\"application/json\"], \"produces\": [\"application/json\"], \"responses\": {\"200\": {\"description\": \"200 response\", \"schema\": {\"$ref\": \"#/definitions/Empty\"}}}, \"x-amazon-apigateway-integration\": {\"responses\": {\"default\": {\"statusCode\": \"200\"}}, \"uri\": \"${aws_lambda_function.api_handler.invoke_arn}\", \"passthroughBehavior\": \"when_no_match\", \"httpMethod\": \"POST\", \"contentHandling\": \"CONVERT_TO_TEXT\", \"type\": \"aws_proxy\"}, \"security\": [{\"token_auth\": []}]}, \"post\": {\"consumes\": [\"application/json\"], \"produces\": [\"application/json\"], \"responses\": {\"200\": {\"description\": \"200 response\", \"schema\": {\"$ref\": \"#/definitions/Empty\"}}}, \"x-amazon-apigateway-integration\": {\"responses\": {\"default\": {\"statusCode\": \"200\"}}, \"uri\": \"${aws_lambda_function.api_handler.invoke_arn}\", \"passthroughBehavior\": \"when_no_match\", \"httpMethod\": \"POST\", \"contentHandling\": \"CONVERT_TO_TEXT\", \"type\": \"aws_proxy\"}, \"security\": [{\"token_auth\": []}]}}, \"/reservations\": {\"get\": {\"consumes\": [\"application/json\"], \"produces\": [\"application/json\"], \"responses\": {\"200\": {\"description\": \"200 response\", \"schema\": {\"$ref\": \"#/definitions/Empty\"}}}, \"x-amazon-apigateway-integration\": {\"responses\": {\"default\": {\"statusCode\": \"200\"}}, \"uri\": \"${aws_lambda_function.api_handler.invoke_arn}\", \"passthroughBehavior\": \"when_no_match\", \"httpMethod\": \"POST\", \"contentHandling\": \"CONVERT_TO_TEXT\", \"type\": \"aws_proxy\"}, \"security\": [{\"token_auth\": []}]}, \"post\": {\"consumes\": [\"application/json\"], \"produces\": [\"application/json\"], \"responses\": {\"200\": {\"description\": \"200 response\", \"schema\": {\"$ref\": \"#/definitions/Empty\"}}}, \"x-amazon-apigateway-integration\": {\"responses\": {\"default\": {\"statusCode\": \"200\"}}, \"uri\": \"${aws_lambda_function.api_handler.invoke_arn}\", \"passthroughBehavior\": \"when_no_match\", \"httpMethod\": \"POST\", \"contentHandling\": \"CONVERT_TO_TEXT\", \"type\": \"aws_proxy\"}, \"security\": [{\"token_auth\": []}]}, \"put\": {\"consumes\": [\"application/json\"], \"produces\": [\"application/json\"], \"responses\": {\"200\": {\"description\": \"200 response\", \"schema\": {\"$ref\": \"#/definitions/Empty\"}}}, \"x-amazon-apigateway-integration\": {\"responses\": {\"default\": {\"statusCode\": \"200\"}}, \"uri\": \"${aws_lambda_function.api_handler.invoke_arn}\", \"passthroughBehavior\": \"when_no_match\", \"httpMethod\": \"POST\", \"contentHandling\": \"CONVERT_TO_TEXT\", \"type\": \"aws_proxy\"}, \"security\": [{\"token_auth\": []}]}, \"delete\": {\"consumes\": [\"application/json\"], \"produces\": [\"application/json\"], \"responses\": {\"200\": {\"description\": \"200 response\", \"schema\": {\"$ref\": \"#/definitions/Empty\"}}}, \"x-amazon-apigateway-integration\": {\"responses\": {\"default\": {\"statusCode\": \"200\"}}, \"uri\": \"${aws_lambda_function.api_handler.invoke_arn}\", \"passthroughBehavior\": \"when_no_match\", \"httpMethod\": \"POST\", \"contentHandling\": \"CONVERT_TO_TEXT\", \"type\": \"aws_proxy\"}, \"security\": [{\"token_auth\": []}]}}}, \"definitions\": {\"Empty\": {\"type\": \"object\", \"title\": \"Empty Schema\"}}, \"x-amazon-apigateway-binary-media-types\": [\"application/octet-stream\", \"application/x-tar\", \"application/zip\", \"audio/basic\", \"audio/ogg\", \"audio/mp4\", \"audio/mpeg\", \"audio/wav\", \"audio/webm\", \"image/png\", \"image/jpg\", \"image/jpeg\", \"image/gif\", \"video/ogg\", \"video/mpeg\", \"video/webm\"], \"securityDefinitions\": {\"token_auth\": {\"in\": \"header\", \"type\": \"apiKey\", \"name\": \"Authorization\", \"x-amazon-apigateway-authtype\": \"custom\", \"x-amazon-apigateway-authorizer\": {\"type\": \"token\", \"authorizerUri\": \"${aws_lambda_function.token_auth.invoke_arn}\"}}}}"
       }
     }
   },

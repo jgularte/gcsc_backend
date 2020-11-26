@@ -21,7 +21,7 @@ from botocore.exceptions import ClientError
 # init logger and resource
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-dynamodb = boto3.resource("dynamodb")
+dynamodb = boto3.resource("dynamodb", region_name="us-west-2")
 
 
 def write(table_name: str, item: Dict = None, return_values="NONE") -> Dict:

@@ -21,17 +21,27 @@ LIST/GET/QUERY
 """
 
 
-def list_reservations() -> Response:
+def list_reservations(table_name: str) -> Response:
     """
     List all reservations.
-    :return:
+
+    :param table_name: Table name to search
+    :return: Chalice response object.
     """
+    return Response(
+        status_code=200,
+        body={
+            "message": "List successful",
+            "data": table_name
+        }
+    )
 
 
-def get_reservation(reservation_guid: str) -> Response:
+def get_reservation(table_name: str, reservation_guid: str) -> Response:
     """
     Get a reservation via its id.
 
+    :param table_name: Table name to search
     :param reservation_guid: The reservation guid
     :return: Chalice response object.
     """
@@ -50,10 +60,11 @@ CREATE/UPDATE
 """
 
 
-def create_reservation(reservation: dict) -> Response:
+def create_reservation(table_name: str, reservation: dict) -> Response:
     """
     Create a new reservation.
 
+    :param table_name: Table name to search
     :param reservation: reservation object to create.
     :return: Chalice response object.
     """
@@ -73,10 +84,11 @@ def create_reservation(reservation: dict) -> Response:
     )
 
 
-def update_reservation(reservation: dict) -> Response:
+def update_reservation(table_name: str, reservation: dict) -> Response:
     """
     Update an existing reservation.
 
+    :param table_name: Table name to search
     :param reservation: reservation to update.
     :return: Chalice response object.
     """
@@ -101,10 +113,11 @@ DELETE
 """
 
 
-def delete_reservation(reservation_guid: str) -> Response:
+def delete_reservation(table_name: str, reservation_guid: str) -> Response:
     """
     Delete a reservation via its guid.
 
+    :param table_name: Table name to search
     :param reservation_guid: The reservation guid
     :return: Chalice response object.
     """
