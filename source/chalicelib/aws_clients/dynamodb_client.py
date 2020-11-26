@@ -300,8 +300,7 @@ def delete_item(table_name: str, item: Dict, return_values="NONE") -> Dict:
         raise e
 
 
-def match_primary(table_name: str, primary_key: str, primary_key_val: str or int, index_name: str = None,
-                       query_index=False) -> Dict:
+def match_primary(table_name: str, primary_key: str, primary_key_val: str or int, index_name: str = None, query_index=False) -> Dict:
     """
     Description: Use to make a query with primary key equal to value
     Link: https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/dynamodb.html#DynamoDB.Table.query

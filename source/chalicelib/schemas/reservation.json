@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/reservation.schema.json",
+  "title": "Reservation",
+  "description": "A Reservation created by a user",
+  "type": "object",
+  "properties": {
+    "reservation_guid": {
+      "description": "The unique id given to the reservation",
+      "type": "string"
+    },
+    "user_guid": {
+      "description": "The user that created the reservation",
+      "type": "string"
+    },
+    "epoch_start": {
+      "description": "The start date of the reservation as a epoch in seconds via UTC",
+      "type": "integer"
+    },
+    "epoch_end": {
+      "description": "The end date of the reservation as an epoch in seconds via UTC",
+      "type": "integer"
+    },
+    "reservation_type": {
+      "description": "Type of reservation, currently open or closed, but leaving as string in case new types arise",
+      "type": "string",
+      "enum": ["open", "closed"],
+      "default": "closed"
+    }
+  },
+  "required": [
+    "reservation_guid",
+    "user_guid",
+    "epoch_start",
+    "epoch_end",
+    "reservation_type"
+  ]
+}
