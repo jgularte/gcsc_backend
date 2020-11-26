@@ -21,7 +21,7 @@ from botocore.exceptions import ClientError
 # init logger and resource
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-dynamodb = boto3.resource("dynamodb")
+dynamodb = boto3.resource("dynamodb", region_name="us-west-2")
 
 
 def write(table_name: str, item: Dict = None, return_values="NONE") -> Dict:
@@ -300,8 +300,7 @@ def delete_item(table_name: str, item: Dict, return_values="NONE") -> Dict:
         raise e
 
 
-def match_primary(table_name: str, primary_key: str, primary_key_val: str or int, index_name: str = None,
-                       query_index=False) -> Dict:
+def match_primary(table_name: str, primary_key: str, primary_key_val: str or int, index_name: str = None, query_index=False) -> Dict:
     """
     Description: Use to make a query with primary key equal to value
     Link: https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/dynamodb.html#DynamoDB.Table.query

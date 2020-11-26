@@ -1,5 +1,6 @@
 {
   "secret_id": "gcsc_api_tokens",
   "secret_key": "gcsc_sandbox_token",
-  "secret_region": "us-west-2"
+  "secret_region": "us-west-2",
+  "reservations_table": "reservations-table_sandbox"
 }
