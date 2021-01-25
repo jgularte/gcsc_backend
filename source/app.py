@@ -12,7 +12,7 @@ import os
 import json
 
 # chalice imports
-from chalice import Chalice, AuthResponse, Response
+from chalice import Chalice, AuthResponse, Response, CORSConfig
 
 # aws clients imports
 from chalicelib.aws_clients import secrets_manager_client as sm_client
@@ -29,11 +29,21 @@ ENV = os.environ["RUN_ENV"] if "RUN_ENV" in list(os.environ) else "sandbox"
 with open(f"chalicelib/configs/{ENV}.json") as f:
     CONFIG = json.load(f)
 
+CORS = CORSConfig(
+    allow_origin="*",
+    allow_headers=["Content-Type", "Authorization", "Access-Control-Allow-Origin"],
+    max_age=600,
+    expose_headers=[],
+    allow_credentials=False
+)
+
+# init the reservations service
+rs.init_service(
+    env_config=CONFIG
+)
+
 # init chalice app
 app = Chalice(app_name='gularte-cabin-calendar-backend')
-
-# set reservation table link based off env.
-RES_TABLE = CONFIG["reservations_table"]
 
 """
 AUTHORIZERS
@@ -42,7 +52,16 @@ AUTHORIZERS
 
 @app.authorizer()
 def token_auth(auth_request):
-    if auth_request.auth_type == "TOKEN" and auth_request.token == sm_client.get_secret(CONFIG["secret_id"], CONFIG["secret_key"], CONFIG["secret_region"]):
+    # super secure and secret local dev authorization
+    if ENV == "local" and auth_request.auth_type == "TOKEN":
+        if auth_request.token == CONFIG["secret"]:
+            return AuthResponse(routes=["/*"], principal_id="user")
+        else:
+            return AuthResponse(routes=[], principal_id="user")
+
+    if auth_request.auth_type == "TOKEN" and auth_request.token == sm_client.get_secret(CONFIG["secret_id"],
+                                                                                        CONFIG["secret_key"],
+                                                                                        CONFIG["secret_region"]):
         logger.info({"AuthType": auth_request.auth_type, "Success": True})
         return AuthResponse(routes=["/*"], principal_id="user")
     else:
@@ -67,7 +86,7 @@ def healthcheck() -> Response:
     :return: Chalice response object.
     """
     # log request and return
-    log(app.current_request.to_dict(), app.current_request.json_body)
+    log_request(app.current_request.to_dict(), app.current_request.json_body)
     return Response(status_code=200, body={"message": "I am healthy."})
 
 
@@ -79,7 +98,8 @@ RESERVATIONS CONTROLLER
 @app.route(
     "/reservations",
     methods=["GET", "POST", "PUT", "DELETE"],
-    authorizer=token_auth
+    authorizer=token_auth,
+    cors=CORS
 )
 def reservation() -> Response:
     """
@@ -88,18 +108,15 @@ def reservation() -> Response:
     :return: Chalice response object.
     """
     # log incoming request
-    log(app.current_request.to_dict(), app.current_request.json_body)
+    # log_request(app.current_request.to_dict(), app.current_request.json_body)
 
     # perform routing based off request
     if app.current_request.method == "GET":
         # GET reservation; if 'id' query param is available, use to get a single res. if no params then list all res.
         if not app.current_request.query_params:
-            return rs.list_reservations(
-                table_name=RES_TABLE
-            )
+            return rs.list_reservations()
         elif app.current_request.query_params.get("guid"):
             return rs.get_reservation(
-                table_name=RES_TABLE,
                 reservation_guid=app.current_request.query_params["guid"]
             )
         else:
@@ -114,7 +131,6 @@ def reservation() -> Response:
         # POST reservation; the reservation to create needs to be in the requests body
         if app.current_request.json_body:
             return rs.create_reservation(
-                table_name=RES_TABLE,
                 reservation=app.current_request.json_body
             )
         else:
@@ -130,7 +146,6 @@ def reservation() -> Response:
         # POST reservation; the reservation to create needs to be in the requests body
         if app.current_request.json_body:
             return rs.update_reservation(
-                table_name=RES_TABLE,
                 reservation=app.current_request.json_body
             )
         else:
@@ -145,7 +160,6 @@ def reservation() -> Response:
         # DELETE reservation; the 'id' query param indicates what reservation to delete
         if app.current_request.query_params.get("guid"):
             return rs.delete_reservation(
-                table_name=RES_TABLE,
                 reservation_guid=app.current_request.query_params["guid"]
             )
         else:
@@ -163,10 +177,10 @@ HELPER FUNCTIONS
 """
 
 
-def log(request: dict, body: dict or None) -> None:
-    logger.info(f"Path: {request['path']}; \n"
-                f"Method: {request['method']}; \n"
-                f"URI Params: {json.dumps(request['uri_params'])}; \n"
-                f"Query Params: {json.dumps(request['query_params'])}; \n"
-                f"Body: {json.dumps(body)}"
-                )
+def log_request(request: dict, body: dict or None) -> None:
+    logger.warning(f"Path: {request['path']}; \n"
+                   f"Method: {request['method']}; \n"
+                   f"URI Params: {json.dumps(request['uri_params'])}; \n"
+                   f"Query Params: {json.dumps(request['query_params'])}; \n"
+                   f"Body: {json.dumps(body)}"
+                   )

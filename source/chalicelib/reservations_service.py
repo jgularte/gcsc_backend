@@ -4,9 +4,11 @@ author: Jack Gularte
 date: Nov 25 2020
 """
 # standard imports
+import boto3
 import json
 import logging
 import fastjsonschema
+from typing import Dict, List
 from fastjsonschema.exceptions import JsonSchemaException
 from uuid import uuid4
 
@@ -14,7 +16,7 @@ from uuid import uuid4
 from chalice import Response
 
 # internal imports
-from .aws_clients import dynamodb_client as dc
+from chalicelib.aws_clients import dynamodb_client as dc
 
 # load in schema file and compile it for quicker evaluations; remember that working dir starts at chalicelib.
 with open("chalicelib/schemas/reservation.json", "r") as schema_file:
@@ -26,47 +28,60 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 # globals
-RESERVATION_PRIMARY = "reservation_guid"
-RESERVATION_SORT = "epoch_start"
+RES_TABLE = ""
+RES_HASH = "reservation_guid"
+RES_SORT = "epoch_start"
 
 INT_FIELDS = [
     "epoch_start",
     "epoch_end"
 ]
 
+
+def init_service(env_config: Dict) -> None:
+    """
+    Function used to initiate the service based on the current run env. Set the table info and if we are
+    in a local environment, then replace the dynamodb resource in the client with a specialized local endpoint instance.
+    :param env_config: The current environment configuration
+    :return: None
+    """
+    global RES_TABLE
+    RES_TABLE = env_config["reservations_table"]
+
+    if env_config["env"] == "local":
+        dc.dynamodb = boto3.resource("dynamodb", endpoint_url=env_config["ddb_endpoint_url"])
+
+
 """
 LIST/GET/QUERY
 """
 
 
-def list_reservations(table_name: str) -> Response:
+def list_reservations() -> Response:
     """
     List all reservations.
-
-    :param table_name: Table name to search
+    TODO THIS CAN BE MUCH BETTER
     :return: Chalice response object.
     """
-    raise NotImplementedError()
-    # return Response(
-    #     status_code=200,
-    #     body={
-    #         "message": "List successful",
-    #         "data": table_name
-    #     }
-    # )
+    return Response(
+        status_code=200,
+        body={
+            "message": "List successful",
+            "data": dc.scan_table(table_name=RES_TABLE)["Items"]
+        }
+    )
 
 
-def get_reservation(table_name: str, reservation_guid: str) -> Response:
+def get_reservation(reservation_guid: str) -> Response:
     """
     Get a reservation via its id.
 
-    :param table_name: Table name to search
     :param reservation_guid: The reservation guid
     :return: Chalice response object.
     """
     reservations = dc.match_primary(
-        table_name=table_name,
-        primary_key="reservation_guid",
+        table_name=RES_TABLE,
+        primary_key=RES_HASH,
         primary_key_val=reservation_guid,
         index_name=None,
         query_index=False
@@ -103,29 +118,26 @@ CREATE/UPDATE
 """
 
 
-def create_reservation(table_name: str, reservation: dict) -> Response:
+def create_reservation(reservation: dict) -> Response:
     """
     Create a new reservation.
 
-    :param table_name: Table name to search
     :param reservation: reservation object to create.
     :return: Chalice response object.
     """
     # give the incoming reservation a guid, if a guid is passed by the user it will override it.
-    reservation["reservation_guid"] = str(uuid4())
+    reservation[RES_HASH] = str(uuid4())
 
     # first check to see if reservation guid already exists in table. In this case a 404 result is desired.
-    # chances are there won't be any conflict since uuid4 guids are 36 chars long but, if a conflict occurs, I make sure
+    # chances are there won't be any conflict since uuid4 guids are 36 chars long but, if a conflict occurs, make sure
     # to handle it
     get_response = get_reservation(
-        table_name=table_name,
-        reservation_guid=reservation["reservation_guid"]
+        reservation_guid=reservation[RES_HASH]
     )
     while get_response.status_code != 404:
-        reservation["reservation_guid"] = str(uuid4())
+        reservation[RES_HASH] = str(uuid4())
         get_response = get_reservation(
-            table_name=table_name,
-            reservation_guid=reservation["reservation_guid"]
+            reservation_guid=reservation[RES_HASH]
         )
 
     # validate the incoming reservation, if error, return the error before creation
@@ -141,7 +153,7 @@ def create_reservation(table_name: str, reservation: dict) -> Response:
 
     # write reservation to table
     dc.write(
-        table_name=table_name,
+        table_name=RES_TABLE,
         item=reservation,
         return_values="NONE"
     )
@@ -156,25 +168,23 @@ def create_reservation(table_name: str, reservation: dict) -> Response:
     )
 
 
-def update_reservation(table_name: str, reservation: dict) -> Response:
+def update_reservation(reservation: dict) -> Response:
     """
     Update an existing reservation.
 
-    :param table_name: Table name to search
     :param reservation: reservation to update.
     :return: Chalice response object.
     """
 
     # check to make sure that a reservation with this guid exists
     get_response = get_reservation(
-        table_name=table_name,
-        reservation_guid=reservation["reservation_guid"]
+        reservation_guid=reservation[RES_HASH]
     )
     if get_response.status_code != 200:
         return Response(
             status_code=400,
             body={
-                "error": f"No reservation profile with guid '{reservation['reservation_guid']}' exists. "
+                "error": f"No reservation profile with guid '{reservation[RES_HASH]}' exists. "
                          f"Please create a reservation before updating."
             }
         )
@@ -212,18 +222,16 @@ DELETE
 """
 
 
-def delete_reservation(table_name: str, reservation_guid: str) -> Response:
+def delete_reservation(reservation_guid: str) -> Response:
     """
     Delete a reservation via its guid.
 
-    :param table_name: Table name to search
     :param reservation_guid: The reservation guid
     :return: Chalice response object.
     """
 
     # first get reservation using primary key 'reservation_guid'. If no reservation found return 404 error.
     reservation_resp = get_reservation(
-        table_name=table_name,
         reservation_guid=reservation_guid
     )
     if reservation_resp.status_code == 404:
@@ -235,8 +243,8 @@ def delete_reservation(table_name: str, reservation_guid: str) -> Response:
     dc.delete_item(
         table_name=table_name,
         item={
-            RESERVATION_PRIMARY: reservation[RESERVATION_PRIMARY],
-            RESERVATION_SORT: reservation[RESERVATION_SORT]
+            RES_HASH: reservation[RES_HASH],
+            RES_SORT: reservation[RES_SORT]
         }
     )
     return Response(

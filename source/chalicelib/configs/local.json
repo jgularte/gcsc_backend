@@ -1,0 +1,6 @@
+{
+  "env": "local",
+  "secret": "gobengals",
+  "ddb_endpoint_url": "http://localhost:8000",
+  "reservations_table": "reservations-table_local"
+}

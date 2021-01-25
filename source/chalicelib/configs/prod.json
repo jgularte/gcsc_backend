@@ -1,4 +1,5 @@
 {
+  "env": "prod",
   "secret_id": "gcsc_api_tokens",
   "secret_key": "gcsc_prod_token",
   "secret_region": "us-west-2",
