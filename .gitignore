@@ -7,4 +7,4 @@ terraform/sandbox/build-tfplan
 terraform/sandbox/deployment.zip
 terraform/prod/build-tfplan
 terraform/prod/deployment.zip
-.pyc
+*.pyc
