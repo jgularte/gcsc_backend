@@ -202,7 +202,7 @@ def update_reservation(reservation: dict) -> Response:
 
     # write item to table
     dc.write(
-        table_name=table_name,
+        table_name=RES_TABLE,
         item=reservation,
         return_values="NONE"
     )
@@ -241,7 +241,7 @@ def delete_reservation(reservation_guid: str) -> Response:
     reservation = reservation_resp.body["data"]
 
     dc.delete_item(
-        table_name=table_name,
+        table_name=RES_TABLE,
         item={
             RES_HASH: reservation[RES_HASH],
             RES_SORT: reservation[RES_SORT]

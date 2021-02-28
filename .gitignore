@@ -8,3 +8,4 @@ terraform/sandbox/deployment.zip
 terraform/prod/build-tfplan
 terraform/prod/deployment.zip
 *.pyc
+source/__pycache__/app.cpython-38.pyc
