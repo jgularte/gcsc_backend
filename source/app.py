@@ -19,6 +19,7 @@ from chalicelib.aws_clients import secrets_manager_client as sm_client
 
 # custom services imports
 from chalicelib import reservations_service as rs
+from chalicelib import auth_service as auth
 
 # init logging client
 logger = logging.getLogger(__name__)
@@ -34,11 +35,15 @@ CORS = CORSConfig(
     allow_headers=["Content-Type", "Authorization", "Access-Control-Allow-Origin"],
     max_age=600,
     expose_headers=[],
-    allow_credentials=False
+    allow_credentials=True
 )
 
 # init the reservations service
 rs.init_service(
+    env_config=CONFIG
+)
+
+auth.init_service(
     env_config=CONFIG
 )
 
@@ -88,6 +93,28 @@ def healthcheck() -> Response:
     # log request and return
     log_request(app.current_request.to_dict(), app.current_request.json_body)
     return Response(status_code=200, body={"message": "I am healthy."})
+
+
+"""
+AUTHORIZATION CONTROLLER
+"""
+
+
+@app.route(
+    "/authorization",
+    methods=["POST"],
+    authorizer=token_auth,
+    cors=CORS
+)
+def authorize() -> Response:
+    # log request
+    # log_request(app.current_request.to_dict(), app.current_request.json_body)
+    if app.current_request.method == "POST":
+        return auth.init_auth_flow(
+            client_id=app.current_request.json_body["client_id"],
+            username=app.current_request.json_body["username"],
+            password_hash=app.current_request.json_body["password"]
+        )
 
 
 """

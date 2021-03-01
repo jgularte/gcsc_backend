@@ -63,6 +63,7 @@ def list_reservations() -> Response:
     TODO THIS CAN BE MUCH BETTER
     :return: Chalice response object.
     """
+    print(dc.scan_table(table_name=RES_TABLE)["Items"])
     return Response(
         status_code=200,
         body={
