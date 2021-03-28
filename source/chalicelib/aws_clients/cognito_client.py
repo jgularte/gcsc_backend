@@ -48,3 +48,9 @@ def respond_to_auth_challenge(client_id: str, session: str, challenge: str, chal
         ChallengeName=challenge,
         ChallengeResponses=challenge_params
     )
+
+
+def get_user_via_access_token(access_token: str) -> Dict:
+    return cognito.get_user(
+        AccessToken=access_token
+    )

@@ -21,11 +21,9 @@
       "description": "The end date of the reservation as an epoch in seconds via UTC",
       "type": "integer"
     },
-    "reservation_type": {
-      "description": "Type of reservation, currently open or closed, but leaving as string in case new types arise",
-      "type": "string",
-      "enum": ["open", "closed"],
-      "default": "closed"
+    "display_name": {
+      "description": "The reservation's owner's display name",
+      "type": "string"
     }
   },
   "required": [
@@ -33,6 +31,6 @@
     "user_guid",
     "epoch_start",
     "epoch_end",
-    "reservation_type"
+    "display_name"
   ]
 }

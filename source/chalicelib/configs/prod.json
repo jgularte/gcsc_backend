@@ -3,5 +3,6 @@
   "secret_id": "gcsc_api_tokens",
   "secret_key": "gcsc_prod_token",
   "secret_region": "us-west-2",
-  "reservations_table": "reservations-table"
+  "reservations_table": "reservations-table",
+  "user_info_table": "userinfo-table"
 }

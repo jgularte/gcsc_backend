@@ -70,6 +70,10 @@ resource "aws_cognito_user_pool" "user-pool" {
       attribute_data_type = schema.value.data_type
       name = schema.value.name
       required = schema.value.required
+      string_attribute_constraints {
+        min_length = "1"
+        max_length = "25"
+      }
     }
   }
 

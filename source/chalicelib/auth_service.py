@@ -68,7 +68,7 @@ def init_auth_flow(client_id: str, username: str, password_hash: str) -> Respons
         return Response(
             status_code=401,
             body={
-                "error": "Unauthorized. Invalid "
+                "error": f"Unauthorized. Invalid."
             }
         )
     # todo chalice-ize response
@@ -89,4 +89,21 @@ def respond_auth_flow(client_id: str, challenge: str, session: str, challenge_pa
 
 
 def change_password(previous: str, proposed: str, token: str) -> Response:
-    pass
+    raise NotImplementedError
+
+
+def get_user_via_access_token(access_token: str) -> Response:
+    try:
+        resp = cognito_client.get_user_via_access_token(
+            access_token=access_token
+        )
+    except ClientError as ce:
+        logger.error(f"BOTO3 ERROR: {ce.response}")
+        return Response(
+            status_code=500,
+            body={
+                "error": f"{ce.response}"
+            }
+        )
+
+    return resp

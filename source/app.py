@@ -20,6 +20,7 @@ from chalicelib.aws_clients import secrets_manager_client as sm_client
 # custom services imports
 from chalicelib import reservations_service as rs
 from chalicelib import auth_service as auth
+from chalicelib import user_info_service as uis
 
 # init logging client
 logger = logging.getLogger(__name__)
@@ -44,6 +45,10 @@ rs.init_service(
 )
 
 auth.init_service(
+    env_config=CONFIG
+)
+
+uis.init_service(
     env_config=CONFIG
 )
 
@@ -102,13 +107,26 @@ AUTHORIZATION CONTROLLER
 
 @app.route(
     "/authorization",
-    methods=["POST"],
+    methods=["GET", "POST"],
     authorizer=token_auth,
     cors=CORS
 )
 def authorize() -> Response:
     # log request
     # log_request(app.current_request.to_dict(), app.current_request.json_body)
+    if app.current_request.method == "GET":
+        if not app.current_request.query_params.get("at"):
+            return Response(
+                status_code=400,
+                body={
+                    "error": "No access token provided in the current request's query parameters."
+                }
+            )
+
+        return auth.get_user_via_access_token(
+            access_token=app.current_request.query_params["at"]
+        )
+
     if app.current_request.method == "POST":
         return auth.init_auth_flow(
             client_id=app.current_request.json_body["client_id"],
@@ -117,6 +135,23 @@ def authorize() -> Response:
         )
 
 
+@app.route(
+    "/user_info",
+    methods=["GET"],
+    authorizer=token_auth,
+    cors=CORS
+)
+def user_info() -> Response:
+    if app.current_request.method == "GET":
+        if not app.current_request.query_params.get("uguid"):
+            return Response(
+                status_code=400,
+                body={
+                    "error": "the parameter 'uguid' is not in the request's query parameters."
+                }
+            )
+
+        return uis.get_userinfo(app.current_request.query_params["uguid"])
 """
 RESERVATIONS CONTROLLER
 """

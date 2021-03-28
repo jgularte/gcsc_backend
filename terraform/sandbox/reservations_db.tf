@@ -77,6 +77,6 @@ resource "aws_dynamodb_table" "reservations_table" {
   }
 }
 
-output "arn" {
+output "reservations_db_arn" {
   value = aws_dynamodb_table.reservations_table.arn
 }
